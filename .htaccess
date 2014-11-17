@@ -1,0 +1,12 @@
+<Files *>
+
+AuthType WebAuth
+
+require user aheine
+
+satisfy any
+
+order allow,deny
+
+</Files>
+                
