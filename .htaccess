@@ -1,8 +1,8 @@
-<Files *>
+<Files admin.php>
 
 AuthType WebAuth
 
-require user aheine
+require user aheine kzeiba rerickso
 
 satisfy any
 
