@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>Alice Heine Final Assignment</title>
+        <title>Household Expense Manger</title>
         <meta charset="utf-8">
         <meta name="author" content="Alice Heine">
-        <meta name="description" content="alice heine final assignment10">
+        <meta name="description" content="alice heine final assignment10 household expense manager">
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
 

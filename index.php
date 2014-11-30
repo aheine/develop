@@ -33,6 +33,7 @@
 
 include "top.php";
 
+
 require_once('../bin/myDatabase.php');
 
 $dbUserName = get_current_user() . '_writer';
@@ -49,7 +50,7 @@ $phpSelf = htmlentities($_SERVER['PHP_SELF'], ENT_QUOTES, "UTF-8");
 //
 // SECTION: 1a.
 // variables for the classroom purposes to help find errors.
-$debug = true;
+$debug = false;
 if (isset($_GET["debug"])) { // ONLY do this in a classroom environment
     $debug = true;
 }
@@ -71,12 +72,18 @@ $yourURL = $domain . $phpSelf;
 // Initialize variables one for each form element
 // in the order they appear on the form
 $email = "";
+$householdname = "";
 $username = "";
 $month = "";
 $type = "electricity";
 $amount = "";
 $paid = "yes";
 $lost = "no";
+$billname = "";
+$cash = "";
+$credit = "";
+$check = "";
+
 //%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%
 //
 // SECTION: 1d form error flags
@@ -86,6 +93,8 @@ $lost = "no";
 $emailERROR = false;
 $usernameERROR = false;
 $amountERROR = false;
+$householdnameERROR = false;
+$billnameERROR = false;
 
 
 //%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%
@@ -124,11 +133,38 @@ if (isset($_POST["btnSubmit"])) {
 // form. Note it is best to follow the same order as declared in section 1c.
 $email = filter_var($_POST["txtEmail"], FILTER_SANITIZE_EMAIL);
 $username = htmlentities($_POST["txtUsername"], ENT_QUOTES, "UTF-8");
+$householdname = htmlentities($_POST["txtHouseholdName"], ENT_QUOTES, "UTF-8");
 $month = htmlentities($_POST["lstMonth"], ENT_QUOTES, "UTF-8");
 $type = htmlentities($_POST["radType"], ENT_QUOTES, "UTF-8");
 $amount = htmlentities($_POST["txtAmount"], ENT_QUOTES, "UTF-8");
 $paid = htmlentities($_POST["radPaid"], ENT_QUOTES, "UTF-8");
 $lost = htmlentities($_POST["radLost"], ENT_QUOTES, "UTF-8");
+$billname = htmlentities($_POST["txtBillName"], ENT_QUOTES, "UTF-8");
+$cash = htmlentities($_POST["chkCash"], ENT_QUOTES, "UTF-8");
+$credit = htmlentities($_POST["chkCredit"], ENT_QUOTES, "UTF-8");
+$check = htmlentities($_POST["chkCheck"], ENT_QUOTES, "UTF-8");
+        
+
+
+
+    if(isset($_POST["chkCash"])) {
+        $stowe  = true;
+    }else{
+        $stowe  = false;
+    }
+    
+    if(isset($_POST["chkCredit"])) {
+        $sugarbush  = true;
+    }else{
+        $sugarbush  = false;
+    }
+    
+        if(isset($_POST["chkCheck"])) {
+        $madriver  = true;
+    }else{
+        $madriver  = false;
+    }
+
 
 if($debug) print 'Email: ' . $email;
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -157,6 +193,16 @@ if($debug) print 'Email: ' . $email;
         $errorMsg[] = "Your username must be only letters and numbers";
         $usernameERROR = true;
     }
+    
+    if ($householdname == "") {
+        if($debug) print 'Household name is blank';
+        $errorMsg[] = "Please enter your household name";
+        $usernameERROR = true;
+    } elseif (!verifyAlphaNum($householdname)){
+        $errorMsg[] = "Your householdname must be only letters and numbers";
+        $usernameERROR = true;
+    }
+    
         if ($amount == "") {
         if($debug) print 'Amount is blank';
         $errorMsg[] = "Please enter the amount";
@@ -165,7 +211,14 @@ if($debug) print 'Email: ' . $email;
         $errorMsg[] = "Your username must be only letters and numbers";
         $amountERROR = true;
     }
-    
+    if ($billname == "") {
+        if($debug) print 'Bill name is blank';
+        $errorMsg[] = "Please enter your bill name";
+        $billnameERROR = true;
+    } elseif (!verifyAlphaNum($billname)){
+        $errorMsg[] = "Your billname must be only letters and numbers";
+        $billnameERROR = true;
+    }
 
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -191,8 +244,9 @@ if($debug) print 'Email: ' . $email;
         try {
            
             $thisDatabase->db->beginTransaction();
-            $query = 'INSERT INTO tblRecord (fldEmail, fldUsername, fldMonth, fldType, fldAmount, fldPaid, fldLost) VALUES (?, ?, ?, ?, ?, ?, ?)';
-            $data = array($email, $username, $month, $type, $amount, $paid, $lost); 
+            $query = 'INSERT INTO tblPerson (pmkUsername, fldEmail, fnkHouseholdName) VALUES (?, ?, ?)';
+
+            $data = array( $username, $email, $householdname); 
             if ($debug) {
                 print "<p>sql " . $query;
                 print"<p><pre>";
@@ -200,14 +254,25 @@ if($debug) print 'Email: ' . $email;
                 print"</pre></p>";
             }
             $results = $thisDatabase->insert($query, $data);
+            
+            $query1 = 'INSERT INTO tblHousehold (pmkHouseholdName) VALUES (?)';
+            $data1 = array($householdname);
+            $results1 = $thisDatabase->insert($query1, $data1);
+            
+            $query2 = 'INSERT INTO tblBills (fldType, fldPaid, fldLost, fldAmount,fldMonth, fnkHouseholdName, fnkUsername, pmkBillName, fldCash, fldCredit, fldCheck) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            $data2 = array($type, $paid, $lost, $amount, $month, $householdname, $username, $billname, $cash, $credit, $check);
+            $results2 = $thisDatabase->insert($query2, $data2);
 
-            $primaryKey = $thisDatabase->lastInsert();
-            //if ($debug)
+            //$primaryKey = $thisDatabase->lastInsert();
+            
+            if ($debug){
+                print_r($results);
+            }
 
 
 // all sql statements are done so lets commit to our changes
             $dataEntered = $thisDatabase->db->commit();
-            $dataEntered = true;
+            //$dataEntered = true;
             if ($debug)
                 print "<p>transaction complete ";
         } catch (PDOExecption $e) {
@@ -222,10 +287,10 @@ if($debug) print 'Email: ' . $email;
                 print "<p>data entered now prepare keys ";
             //#################################################################
             // create a key value for confirmation
-
+//
 //            $query = "SELECT fldDateJoined FROM tblRegister WHERE pkRegisterId=" . $primaryKey;
 //            $results = $thisDatabase->select($query);
-//
+
 //            $dateSubmitted = $results[0]["fldDateJoined"];
 //
 //            $key1 = sha1($dateSubmitted);
@@ -241,15 +306,12 @@ if($debug) print 'Email: ' . $email;
             //
 //            //Put forms information into a variable to print on the screen
 //            //
-//
-//            $messageA = '<h2>Thank you for registering.</h2>';
-//
-//            $messageB = "<p>Click this link to confirm your registration: ";
-//            $messageB .= '<a href="' . $domain . $path_parts["dirname"] . '/confirmation.php?q=' . $key1 . '&amp;w=' . $key2 . '">Confirm Registration</a></p>';
-//            $messageB .= "<p>or copy and paste this url into a web browser: ";
-//            $messageB .= $domain . $path_parts["dirname"] . '/confirmation.php?q=' . $key1 . '&amp;w=' . $key2 . "</p>";
 
-//            $messageC .= "<p><b>Email Address:</b><i>   " . $email . "</i></p>";
+            $messageA = '<h2>Household expense record has been processed and updated.</h2>';
+
+            $messageB = "<p>We have recorded your expense data and have stored it for you</p>";
+
+            $messageC .= "<p>A notification has been sent to the following people:   " . $email . "</p>";
 
             //##############################################################
             //
@@ -258,11 +320,10 @@ if($debug) print 'Email: ' . $email;
             $to = $email; // the person who filled out the form
             $cc = "";
             $bcc = "";
-            $from = "Alice's Site <noreply@yoursite.com>";
-            $subject = "CS 148 Form";
+            $from = "Household Expense Manager <noreply@yoursite.com>";
+            $subject = "Household expense record has been processed and updated";
 
-            
-
+           
             $mailed = sendMail($to, $cc, $bcc, $from, $subject, $messageA . $messageB . $messageC);
         } //data entered  
     } // end form is valid
@@ -273,7 +334,7 @@ if($debug) print 'Email: ' . $email;
 // SECTION 3 Display Form
 //
 ?>
-<article id="main">
+<section id="main">
     <?php
 //####################################
 //
@@ -344,26 +405,33 @@ if($debug) print 'Email: ' . $email;
 <legend>Please complete the following form</legend> -->
 
 <fieldset class="contact">
-<legend>Your Information</legend>					
+<legend>Personal Information</legend>	
+
+        <label for="txtHouseholdName" class="required">Household Name</label>
+  	<input type="text" id="txtHouseholdName" name="txtHouseholdName" value="<?php echo $householdname; ?>"
+    		tabindex="110" maxlength="30" placeholder="Enter your household name" onfocus="this.select()" >
+        
 	<label for="txtUsername" class="required">Name</label>
   	<input type="text" id="txtUsername" name="txtUsername" value="<?php echo $username; ?>" 
-    		tabindex="100" maxlength="25" placeholder="Enter your name" autofocus onfocus="this.select()" >
+    		tabindex="100" maxlength="30" placeholder="Enter your name" autofocus onfocus="this.select()" >
 				
 	<label for="txtEmail" class="required">Email</label>
   	<input type="email" id="txtEmail" name="txtEmail" value="<?php echo $email; ?>"
-    		tabindex="110" maxlength="45" placeholder="Enter a valid email address" onfocus="this.select()" >
+    		tabindex="110" maxlength="65" placeholder="Enter a valid email address" onfocus="this.select()" >
         
-    <!--   <label for="txtMisc" class="required">Misc value</label>
-  	<input type="text" id="txtMisc" name="txtMisc" value="<?php echo $misc; ?>"
-    		tabindex="110" maxlength="3" placeholder="enter a valid whole number 0 to 100" onfocus="this.select()" > -->
+       
 
 </fieldset>	
 
 <fieldset class="bill">
-<legend>Bill amount</legend>					
-	<label for="txtAmount" class="required">Amount</label>
+<legend>Expense Information</legend>					
+	<label for="txtAmount" class="required">Total Amount of Bill</label>
   	<input type="text" id="txtAmount" name="txtAmount" value="<?php echo $amount; ?>" 
-    		tabindex="100" maxlength="25" placeholder="Enter your the amount of the bill" autofocus onfocus="this.select()" >
+    		tabindex="100" maxlength="25" placeholder="Enter your the amount of the expense" autofocus onfocus="this.select()" >
+        
+        	<label for="txtBillName" class="required">Give your bill an identifiable title</label>
+  	<input type="text" id="txtBillName" name="txtBillName" value="<?php echo $billname; ?>" 
+         tabindex="100" maxlength="25" placeholder="Enter the title of the expense" autofocus onfocus="this.select()" >
 		
 
 </fieldset>
@@ -371,8 +439,8 @@ if($debug) print 'Email: ' . $email;
 
 
 <fieldset class="radio">
-	<legend>Select type of bill</legend>
-	<label><input type="radio" id="radElec" name="radType" value="Electricity" tabindex="231" 
+	<legend>Select type of expense</legend>
+	<label><input type="radio" id="radElec" name="radType" value="Electricity" checked tabindex="231" 
 			<?php if($type=="Electricity" || !$type) echo ' checked="checked" ';?>>Electricity</label>
       
 	<label><input type="radio" id="radGas" name="radType" value="Gas" tabindex="233" 
@@ -384,8 +452,8 @@ if($debug) print 'Email: ' . $email;
 
 
 <fieldset class="radio">
-	<legend>Have you paid the bill yet?</legend>
-	<label><input type="radio" id="radPaid" name="radPaid" value="Paid" tabindex="231" 
+	<legend>Have you paid the expense yet?</legend>
+	<label><input type="radio" id="radPaid" name="radPaid" value="Paid" checked tabindex="231" 
             <?php if ($paid=="Paid" || !$paid) echo ' checked="checked" ';?>>Paid</label>
             
 	<label><input type="radio" id="radNotPaid" name="radPaid" value="NotPaid" tabindex="233" 
@@ -393,8 +461,8 @@ if($debug) print 'Email: ' . $email;
 </fieldset>
 
 <fieldset class="radio">
-	<legend>Have you lost to receipt of the bill?</legend>
-	<label><input type="radio" id="radLost" name="radLost" value="Lost" tabindex="231" 
+	<legend>Have you lost the receipt of the expense?</legend>
+	<label><input type="radio" id="radLost" name="radLost" value="Lost" checked tabindex="231" 
             <?php if ($paid=="Lost" || !$lost) echo ' checked="checked" ';?>>Lost</label>
             
 	<label><input type="radio" id="radNotLost" name="radLost" value="NotLost" tabindex="233" 
@@ -402,27 +470,18 @@ if($debug) print 'Email: ' . $email;
 </fieldset>
 
 
-<!--<fieldset class="checkbox">
-	<legend>Do you (check all that apply):</legend>
-  	<label><input type="checkbox" id="chkTypea" name="chkTypea" value="Alpine" tabindex="221" 
-			<?php if($typea) echo ' checked="checked" ';?>> Alpine ski</label>
-            
-	<label><input type="checkbox" id="chkTypen" name="chkTypen" value="Nordic" tabindex="223" 
-			<?php if($typen) echo ' checked="checked" ';?>> Nordic ski</label>
-
-</fieldset>
 
 <fieldset class="checkbox">
-	<legend>Which Vermont ski mountains do you like? (check all that apply):</legend>
-  	<label><input type="checkbox" id="chkStowe" name="chkStowe" value="Stowe" tabindex="221" 
-			<?php if($stowe) echo ' checked="checked" ';?>> Stowe</label>
+	<legend>If the expense has already been paid paid, identify how it was paid (check all that apply):</legend>
+  	<label><input type="checkbox" id="chkCash" name="chkCash" value="Cash" tabindex="221" 
+			<?php if($cash) echo ' checked="checked" ';?>> Cash</label>
             
-	<label><input type="checkbox" id="chkSugarbush" name="chkSugarbush" value="Sugarbush" tabindex="223" 
-			<?php if($sugarbush) echo ' checked="checked" ';?>> Sugarbush</label>
+	<label><input type="checkbox" id="chkCredit" name="chkCredit" value="Check" tabindex="223" 
+			<?php if($credit) echo ' checked="checked" ';?>> Credit</label>
         
-        <label><input type="checkbox" id="chkMadriver" name="chkMadriver" value="Madriver" tabindex="223" 
-			<?php if($madriver) echo ' checked="checked" ';?>> Mad River Glen</label>
-</fieldset>-->
+        <label><input type="checkbox" id="chkCheck" name="chkCheck" value="Check" tabindex="223" 
+			<?php if($check) echo ' checked="checked" ';?>> Check</label>
+</fieldset>
 
 
 <fieldset class="lists">	
@@ -444,7 +503,7 @@ if($debug) print 'Email: ' . $email;
 </fieldset>
 
 <fieldset class="buttons">
-	<legend></legend>				
+				
 	<input type="submit" id="btnSubmit" name="btnSubmit" value="Register" tabindex="991" class="button">
 
 	<input type="reset" id="butReset" name="butReset" value="Reset Form" tabindex="993" class="button" onclick="reSetForm()" >
@@ -455,7 +514,7 @@ if($debug) print 'Email: ' . $email;
         <?php
     } // end body submit
     ?>
-</article>
+</section>
 
 
 

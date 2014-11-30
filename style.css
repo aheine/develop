@@ -1,0 +1,137 @@
+/* CSS Designed By Alice Heine */
+
+
+/*General */
+
+* {
+font-size:12pt;
+color:black;
+text-decoration:none;
+font-family: "Century Gothic", CenturyGothic, Geneva, AppleGothic, sans-serif;
+}
+
+header {
+  margin:30px;
+}
+
+nav{
+  margin:0px;
+  padding:0px;
+  position:relative;
+}
+
+nav ul li{
+  list-style-type:none;
+  padding:9px;
+}
+
+section {
+background-color:white;
+position:absolute;
+top:270px; 
+left:300px;
+border-left:solid;
+  padding-left:25px;
+}
+
+h1 {
+text-align:left;
+font-size:14pt;
+}
+
+
+p {
+text-align:left;
+}
+
+
+
+ul li {
+padding:5px;
+}
+
+.wrapper{
+  border-style:none;
+}
+
+.buttons{
+border-style:none;
+}
+
+legend{
+  font-size:12pt;
+  padding:4px;
+}
+
+.contact{
+border-radius:4px;
+}
+
+.contact label{
+  display:block;
+  padding:6px;
+}
+
+.bill{
+  border-radius:4px;
+}
+
+.bill label{
+  display:block;
+}
+
+.radio{
+  border-radius:4px;
+}
+
+.list{
+  border-radius:4px;
+}
+
+input{
+    text-align:center;
+    margin:6px;
+    padding:3px;
+    border-radius:7px;
+}
+
+input:focus{
+    background-color:white;
+    color:darkgrey;
+    border-color:#9ecaed;
+    box-shadow: 0 0 10px #9ecaed;
+}
+
+
+table {
+padding:15px;
+}
+
+th {
+padding:10px;
+color:white;
+background-color:darkgray;
+opacity:0.8;
+text-align:left;
+text-transform:uppercase;
+}
+
+td {
+padding:8px;
+}
+
+
+
+/*Hover Effects */
+
+tr:hover td {
+color:black;
+background-color:lightgray;
+opacity:0.4;
+
+}
+
+tr:hover td a {
+color:black;
+}
+
